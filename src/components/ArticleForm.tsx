@@ -94,7 +94,7 @@ const ModelSelector = ({ model, setModel }: { model: AIModel; setModel: (model: 
   </div>
 )
 
-const ToneSelector = ({
+/* const ToneSelector = ({
   selectedTones,
   onToneChange,
   onSelectAll,
@@ -122,7 +122,7 @@ const ToneSelector = ({
       ))}
     </div>
   </div>
-)
+) */
 
 const ToneCategory = ({
   category,

@@ -30,8 +30,8 @@ A modern web application that generates high-quality articles using AI models (C
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/article-generator.git
-cd article-generator
+git clone https://github.com/andipyk/AI-Article-Generator.git
+cd AI-Article-Generator
 ```
 
 2. Install dependencies:
