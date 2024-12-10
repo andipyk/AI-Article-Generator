@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils"
 
 // Types
 type AIModel = 'anthropic' | 'openai'
+type Language = 'en' | 'id'
 
 // Constants
 const TONE_CATEGORIES = [
@@ -63,18 +64,49 @@ const TONE_CATEGORIES = [
 ] as const
 
 // Sub-components
-const TitleInput = ({ title, setTitle }: { title: string; setTitle: (title: string) => void }) => (
+const TitleInput = ({ 
+  title, 
+  setTitle, 
+  language, 
+  setLanguage 
+}: { 
+  title: string; 
+  setTitle: (title: string) => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
+}) => (
   <div className="space-y-2">
     <Label htmlFor="title" className="text-lg font-semibold">Article Title</Label>
-    <Input
-      id="title"
-      type="text"
-      value={title}
-      onChange={(e) => setTitle(e.target.value)}
-      placeholder="Enter a topic like 'The Future of AI'"
-      required
-      className="text-lg p-4 border-2 border-gray-200 focus:border-blue-500 rounded-lg transition-colors"
-    />
+    <div className="flex gap-2">
+      <Input
+        id="title"
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Enter a topic like 'The Future of AI'"
+        required
+        className="text-lg p-4 border-2 border-gray-200 focus:border-blue-500 rounded-lg transition-colors"
+      />
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+              className="min-w-[50px]"
+            >
+              {language === 'en' ? '🇺🇸' : '🇮🇩'}
+              <span className="ml-1">{language.toUpperCase()}</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Switch to {language === 'en' ? 'Indonesian' : 'English'}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   </div>
 )
 
@@ -93,36 +125,6 @@ const ModelSelector = ({ model, setModel }: { model: AIModel; setModel: (model: 
     </RadioGroup>
   </div>
 )
-
-/* const ToneSelector = ({
-  selectedTones,
-  onToneChange,
-  onSelectAll,
-  onClearAll
-}: {
-  selectedTones: string[];
-  onToneChange: (toneId: string) => void;
-  onSelectAll: () => void;
-  onClearAll: () => void;
-}) => (
-  <div>
-    <Label className="text-lg font-semibold mb-2 block">Select Tones (Multiple)</Label>
-    <div className="flex justify-end space-x-2 mb-2">
-      <Button type="button" variant="outline" size="sm" onClick={onSelectAll}>Select All</Button>
-      <Button type="button" variant="outline" size="sm" onClick={onClearAll}>Clear All</Button>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {TONE_CATEGORIES.map((category) => (
-        <ToneCategory
-          key={category.name}
-          category={category}
-          selectedTones={selectedTones}
-          onToneChange={onToneChange}
-        />
-      ))}
-    </div>
-  </div>
-) */
 
 const ToneCategory = ({
   category,
@@ -214,6 +216,7 @@ const ArticleDisplay = ({
 // Main component
 export function ArticleForm() {
   const [title, setTitle] = useState('')
+  const [language, setLanguage] = useState<Language>('en')
   const [model, setModel] = useState<AIModel>('anthropic')
   const [selectedTones, setSelectedTones] = useState<string[]>([])
   const [article, setArticle] = useState<Article | null>(null)
@@ -228,26 +231,32 @@ export function ArticleForm() {
     setError(null)
     
     try {
-      const result = await generateArticle(title, model, selectedTones)
+      const result = await generateArticle(title, model, selectedTones, language)
       if (result.success) {
         setArticle(result.article)
         toast({
-          title: "Article Generated",
-          description: "Your article has been generated successfully!",
+          title: language === 'en' ? "Article Generated" : "Artikel Berhasil Dibuat",
+          description: language === 'en' 
+            ? "Your article has been generated successfully!"
+            : "Artikel Anda telah berhasil dibuat!",
         })
       } else {
         setError(result.error)
         toast({
-          title: "Error",
-          description: result.error || "Failed to generate article. Please try again.",
+          title: language === 'en' ? "Error" : "Kesalahan",
+          description: result.error || (language === 'en' 
+            ? "Failed to generate article. Please try again."
+            : "Gagal membuat artikel. Silakan coba lagi."),
           variant: "destructive",
         })
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
+      const errorMessage = error instanceof Error ? error.message : (
+        language === 'en' ? "An unexpected error occurred" : "Terjadi kesalahan yang tidak terduga"
+      )
       setError(errorMessage)
       toast({
-        title: "Error",
+        title: language === 'en' ? "Error" : "Kesalahan",
         description: errorMessage,
         variant: "destructive",
       })
@@ -303,7 +312,12 @@ export function ArticleForm() {
   return (
     <div className="space-y-8">
       <form onSubmit={handleSubmit} className="space-y-8">
-        <TitleInput title={title} setTitle={setTitle} />
+        <TitleInput 
+          title={title} 
+          setTitle={setTitle}
+          language={language}
+          setLanguage={setLanguage}
+        />
         <ModelSelector model={model} setModel={setModel} />
         <div className="space-y-4">
           <Label className="text-lg font-semibold">Select Tones (Multiple)</Label>
