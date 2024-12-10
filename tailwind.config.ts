@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import typography from '@tailwindcss/typography';
+import animate from "tailwindcss-animate";
 
 export default {
     darkMode: ["class"],
@@ -55,8 +57,39 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+  		typography: {
+  			DEFAULT: {
+  				css: {
+  					'h1': {
+  						fontSize: '2.5rem',
+  						fontWeight: '700',
+  						marginBottom: '1rem',
+  					},
+  					'h2': {
+  						fontSize: '2rem',
+  						fontWeight: '600',
+  						marginTop: '2rem',
+  						marginBottom: '1rem',
+  					},
+  					'p': {
+  						marginBottom: '1rem',
+  						lineHeight: '1.75',
+  					},
+  					'strong': {
+  						fontWeight: '600',
+  					},
+  					'ul': {
+  						marginBottom: '1rem',
+  						paddingLeft: '1.5rem',
+  					},
+  					'li': {
+  						marginBottom: '0.5rem',
+  					},
+  				},
+  			},
+  		},
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate, typography],
 } satisfies Config;

@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Loader2, Copy, Check } from 'lucide-react'
 import { toast } from "@/hooks/use-toast"
-import { useClipboard } from 'use-clipboard-copy'
 import { Article } from '@/types/article'
 import { cn } from "@/lib/utils"
 
@@ -164,6 +163,10 @@ const ToneCategory = ({
   </Card>
 )
 
+const createMarkup = (html: string) => {
+  return { __html: html };
+}
+
 const ArticleDisplay = ({ 
   article, 
   onCopy, 
@@ -175,18 +178,20 @@ const ArticleDisplay = ({
 }) => (
   <Card className="mt-8">
     <CardHeader>
-      <CardTitle>{article.title}</CardTitle>
+      <CardTitle>
+        <div dangerouslySetInnerHTML={createMarkup(`<h1>${article.title}</h1>`)} />
+      </CardTitle>
     </CardHeader>
     <CardContent>
       <div className="prose max-w-none">
-        <p>{article.introduction}</p>
+        <div dangerouslySetInnerHTML={createMarkup(article.introduction)} />
         {article.sections.map((section) => (
           <div key={section.heading}>
-            <h2>{section.heading}</h2>
-            <p>{section.content}</p>
+            <div dangerouslySetInnerHTML={createMarkup(`<h2>${section.heading}</h2>`)} />
+            <div dangerouslySetInnerHTML={createMarkup(section.content)} />
           </div>
         ))}
-        <p>{article.conclusion}</p>
+        <div dangerouslySetInnerHTML={createMarkup(article.conclusion)} />
       </div>
     </CardContent>
     <CardFooter>
@@ -223,12 +228,18 @@ export function ArticleForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const clipboard = useClipboard()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+    
+    toast({
+      title: language === 'en' ? "Generating Article" : "Membuat Artikel",
+      description: language === 'en' 
+        ? "Please wait while we create your article..."
+        : "Mohon tunggu sementara kami membuat artikel Anda...",
+    })
     
     try {
       const result = await generateArticle(title, model, selectedTones, language)
@@ -286,26 +297,75 @@ export function ArticleForm() {
 
   const handleCopyToClipboard = () => {
     if (article) {
-      const articleText = `
-        ${article.title}
+      const articleHtml = `
+        <h1>${article.title}</h1>
 
         ${article.introduction}
 
         ${article.sections.map((section) => `
-          ${section.heading}
+          <h2>${section.heading}</h2>
           ${section.content}
         `).join('\n\n')}
 
         ${article.conclusion}
-      `.trim()
+      `.trim();
 
-      clipboard.copy(articleText)
-      setIsCopied(true)
-      toast({
-        title: "Copied to Clipboard",
-        description: "The article has been copied to your clipboard.",
-      })
-      setTimeout(() => setIsCopied(false), 2000)
+      // Coba gunakan modern Clipboard API terlebih dahulu
+      if (navigator.clipboard && navigator.clipboard.write) {
+        const clipboardData = new ClipboardItem({
+          'text/html': new Blob([articleHtml], { type: 'text/html' }),
+          'text/plain': new Blob([articleHtml], { type: 'text/plain' })
+        });
+
+        navigator.clipboard.write([clipboardData]).then(() => {
+          setIsCopied(true);
+          toast({
+            title: language === 'en' ? "Copied to Clipboard" : "Disalin ke Clipboard",
+            description: language === 'en' 
+              ? "The formatted article has been copied to your clipboard."
+              : "Artikel berformat telah disalin ke clipboard Anda.",
+          });
+        }).catch(() => {
+          // Fallback ke metode copy biasa jika modern API gagal
+          fallbackCopy();
+        });
+      } else {
+        // Fallback untuk browser yang tidak mendukung modern Clipboard API
+        fallbackCopy();
+      }
+
+      // Fungsi fallback menggunakan execCommand
+      function fallbackCopy() {
+        // Buat temporary textarea
+        const textarea = document.createElement('textarea');
+        textarea.value = articleHtml;
+        document.body.appendChild(textarea);
+        
+        try {
+          textarea.select();
+          document.execCommand('copy');
+          setIsCopied(true);
+          toast({
+            title: language === 'en' ? "Copied to Clipboard" : "Disalin ke Clipboard",
+            description: language === 'en' 
+              ? "The article has been copied to your clipboard."
+              : "Artikel telah disalin ke clipboard Anda.",
+          });
+        } catch (err) {
+          console.error('Fallback copy failed:', err);
+          toast({
+            title: language === 'en' ? "Copy Failed" : "Gagal Menyalin",
+            description: language === 'en'
+              ? "Failed to copy the article. Please try again."
+              : "Gagal menyalin artikel. Silakan coba lagi.",
+            variant: "destructive",
+          });
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      }
+
+      setTimeout(() => setIsCopied(false), 2000);
     }
   }
 
