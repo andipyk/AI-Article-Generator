@@ -46,10 +46,20 @@ export async function generateArticle(
     const response = await generateObject({
       model: aiModel,
       schema: articleSchema,
-      prompt: `Generate a Medium-style article with the title: "${title}". 
+      prompt: `Generate a comprehensive, SEO-friendly Medium-style article with the title: "${title}". 
                ${languageInstruction}
                ${tonesDescription}
-               The article should have an engaging introduction, 3 main sections with clear headings, and a thought-provoking conclusion.
+               The article should be at least 800 words long and include:
+               - An engaging introduction that includes relevant keywords naturally
+               - 3 detailed main sections with descriptive headings
+               - A thought-provoking conclusion
+               
+               SEO Guidelines:
+               - Include relevant keywords naturally throughout the text
+               - Use descriptive subheadings that include target keywords when possible
+               - Write in a clear, scannable format with short paragraphs
+               - Include transition words between paragraphs for better readability
+               
                Format the content using HTML tags:
                - Use <h1> for the title
                - Use <p> for the introduction
@@ -57,7 +67,13 @@ export async function generateArticle(
                - Use <p> for section content
                - Use <p> for the conclusion
                You can also use other HTML tags like <strong>, <em>, <ul>, <li> where appropriate.
-               Ensure the content is informative, well-structured, and tailored to the selected tones.`,
+               
+               Ensure the content is:
+               - Informative and well-researched
+               - Well-structured with logical flow
+               - Tailored to the selected tones
+               - Engaging and valuable to readers
+               - Optimized for search engines while maintaining natural readability`,
     })
 
     // Debug: Periksa struktur response
